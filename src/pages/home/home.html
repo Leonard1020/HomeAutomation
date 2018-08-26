@@ -5,13 +5,79 @@
 </ion-header>
 
 <ion-content padding>
-  <h2>Welcome to Ionic!</h2>
-  <p>
-    This starter project comes with simple tabs-based layout for apps
-    that are going to primarily use a Tabbed UI.
-  </p>
-  <p>
-    Take a look at the <code>src/pages/</code> directory to add or change tabs,
-    update any existing page or create new pages.
-  </p>
+  <h1 no-margin>
+    {{location.name}}
+  </h1>
+  <ion-row style="margin-top: 8px">
+    <ion-col no-padding>
+      <p no-margin>
+        {{forecast.time * 1000 | date: 'EEEE, MMM d'}}
+      </p>
+      <p no-margin>
+        {{forecast.summary}}
+      </p>
+      <ion-row>
+        <ion-col col-3 style="margin-top: 8px;">
+          <h1 no-margin>
+            <ion-icon class="wi {{forecast.icon}}"></ion-icon>
+          </h1>
+        </ion-col>
+        <ion-col col-9 style="margin-top: 8px;">
+          <h1 no-margin>
+            {{forecast.temperature | number:'1.0-0'}}\xB0
+          </h1>
+        </ion-col>
+      </ion-row>
+    </ion-col>
+    <ion-col col-4 no-padding>
+      <p no-margin>
+        Percipitation: {{forecast.precipProbability * 100 | number:'1.0-0'}}%
+      </p>
+      <p no-margin>
+        Humidity: {{forecast.humidity * 100 | number:'1.0-0'}}%
+      </p>
+      <p no-margin>
+        Wind: {{forecast.windSpeed | number:'1.0-1'}} mph
+      </p>
+    </ion-col>
+  </ion-row>
+  <div align="right">
+    <button style="padding: 6px;" [disabled]="showingTemp" (click)='updateGraph(true);'>Temperature</button>
+    <button style="padding: 6px;" [disabled]="!showingTemp" (click)='updateGraph(false);'>Percipitation</button>
+  </div>
+  <div style="display: block;" height="50vh">
+    <canvas baseChart *ngIf="lineChartData"
+              [chartType]="lineChartType"
+              [datasets]="lineChartData"
+              [options]="lineChartOptions"
+              [labels]="lineChartLabels"
+              [colors]="lineChartColors"
+              [legend]="false"></canvas>
+  </div>
+  <ion-row text-center>
+    <ion-col *ngFor="let day of daily">
+      <h5 style="margin-top: 14px; margin-bottom: 8px">
+        {{day.dayOfWeek}}
+      </h5>
+      <p style="margin-top: 8px; margin-bottom: 8px">
+        {{day.temperatureHigh | number:'1.0-0'}}\xB0
+      </p>
+      <p style="margin-top: 8px; margin-bottom: 8px">
+        <ion-icon class="wi {{day.icon}}"></ion-icon>
+      </p>
+    </ion-col>
+  </ion-row>
+  <ion-row text-center>
+    <ion-col *ngFor="let room of rooms">
+      <h5 style="margin-top: 14px; margin-bottom: 8px">
+        {{room.room}}
+      </h5>
+      <p style="margin-top: 8px; margin-bottom: 8px">
+        {{room.temperature | number:'1.0-0'}}\xB0
+      </p>
+      <p style="margin-top: 8px; margin-bottom: 8px">
+        Feels Like: {{room.feelsLike | number:'1.0-0'}}\xB0
+      </p>
+    </ion-col>
+  </ion-row>
 </ion-content>
