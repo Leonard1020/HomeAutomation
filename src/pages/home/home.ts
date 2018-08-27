@@ -159,8 +159,8 @@ export class HomePage {
       // Shift the Y-Axis to display the largest and smallest temp
       var max = Math.max(...data);
       var min = Math.min(...data);
-      var maxPadding = max % 5 < 1 ? 5 - max % 5 : max % 5;
-      var minPadding = min % 5 < 1 ? 5 : min % 5;
+      var maxPadding = max % 5 < 2 ? 5 - max % 5 : max % 5;
+      var minPadding = min % 5 < 1 ? 2 : min % 5;
       this.lineChartOptions.scales.yAxes[0].ticks.max = max + maxPadding;
       this.lineChartOptions.scales.yAxes[0].ticks.min = min - minPadding;
     } else {
