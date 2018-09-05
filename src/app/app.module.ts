@@ -1,16 +1,26 @@
+// Default
 import { NgModule, ErrorHandler } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpClientModule } from '@angular/common/http';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
-import { MyApp } from './app.component';
+import { StatusBar } from '@ionic-native/status-bar';
+import { SplashScreen } from '@ionic-native/splash-screen';
 
+// Added Plugins
+import { Network } from '@ionic-native/network';
+import { ChartsModule } from 'ng2-charts';
+
+// Implemented Pages
 import { HomePage } from '../pages/home/home';
 import { CalendarPage } from '../pages/calendar/calendar';
 import { TabsPage } from '../pages/tabs/tabs';
 
-import { StatusBar } from '@ionic-native/status-bar';
-import { SplashScreen } from '@ionic-native/splash-screen';
-import { ChartsModule } from 'ng2-charts';
+// Implemented Providers
+import { WeatherProxy } from '../providers/weatherProxy';
+import { WeatherGraphHelper } from '../providers/WeatherGraphHelper';
+
+// Weather App
+import { MyApp } from './app.component';
 
 @NgModule({
   declarations: [
@@ -35,6 +45,9 @@ import { ChartsModule } from 'ng2-charts';
   providers: [
     StatusBar,
     SplashScreen,
+    Network,
+    WeatherProxy,
+    WeatherGraphHelper,
     {provide: ErrorHandler, useClass: IonicErrorHandler}
   ]
 })
