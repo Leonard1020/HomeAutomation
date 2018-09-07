@@ -8,7 +8,10 @@ import { SplashScreen } from '@ionic-native/splash-screen';
 
 // Added Plugins
 import { Network } from '@ionic-native/network';
+import { Geolocation } from '@ionic-native/geolocation';
 import { ChartsModule } from 'ng2-charts';
+import { NativeGeocoder } from '@ionic-native/native-geocoder';
+import { Toast } from '@ionic-native/toast';
 
 // Implemented Pages
 import { HomePage } from '../pages/home/home';
@@ -46,6 +49,9 @@ import { MyApp } from './app.component';
     StatusBar,
     SplashScreen,
     Network,
+    Toast,
+    Geolocation,
+    NativeGeocoder,
     WeatherProxy,
     WeatherGraphHelper,
     {provide: ErrorHandler, useClass: IonicErrorHandler}

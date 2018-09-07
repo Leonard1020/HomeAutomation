@@ -2,6 +2,11 @@ import { Component ,ViewChild } from '@angular/core';
 import { NavController, Platform } from 'ionic-angular';
 import { BaseChartDirective } from 'ng2-charts';
 import { Network } from '@ionic-native/network';
+import { Geolocation } from '@ionic-native/geolocation';
+import { Toast } from '@ionic-native/toast';
+import { NativeGeocoder,
+         NativeGeocoderReverseResult,
+       /*NativeGeocoderForwardResult*/ } from '@ionic-native/native-geocoder';
 import { WeatherProxy } from '../../providers/weatherProxy';
 import { WeatherGraphHelper } from '../../providers/WeatherGraphHelper';
 
@@ -20,13 +25,7 @@ export class HomePage {
   private readonly localURL: string = "http://192.168.2.11:5055";
   private readonly localMac: string = "94:10:3e:b3:fe:7d";
 
-  private readonly location = {
-    name: "West Allis",
-    latitude: 43.0167,
-    longitude: -88.007
-  };
-
-  private showingTemp: boolean;
+  private location: any;
 
   private forecast: any;
   private daily: Array<any>;
@@ -36,15 +35,21 @@ export class HomePage {
 
   private rooms: Array<any>;
 
-  private lineChartType: string;
-  private lineChartData: Array<any>;
-  private lineChartLabels: Array<any>;
-  private lineChartOptions: any;
-  private lineChartColors: Array<any>;
+  public showingTemp: boolean;
+  public lineChartType: string;
+  public lineChartData: Array<any>;
+  public lineChartLabels: Array<any>;
+  public lineChartOptions: any;
+  public lineChartColors: Array<any>;
+
+  public showSpinner: boolean;
 
   constructor(public navCtrl: NavController,
               public network: Network,
               public platform: Platform,
+              public toast: Toast,
+              public gps: Geolocation,
+              public geoCoder: NativeGeocoder,
               public graphHelper: WeatherGraphHelper,
               public proxy: WeatherProxy) {
     this.rooms = [];
@@ -54,6 +59,8 @@ export class HomePage {
     this.hourlyTemps = [];
     this.hourlyPercs = [];
     this.showingTemp = true;
+
+    this.showSpinner = true;
 
     // Show Temp graph by default
     this.lineChartType = graphHelper.graphType;
@@ -65,29 +72,107 @@ export class HomePage {
         yAxes: [{ ticks: { display: false }}]
       }
     };
+
+    //Default to Greenfield WI
+    this.location = {
+      "name": "Greenfield",
+      "latitude": 42.961,
+      "longitude": -88.013
+    };
   }
 
   ionViewDidLoad() {
+    this.pullData(undefined);
+  }
+
+  pullData(refresher) {
+    var count = 0;
+    this.getLocation((error: string) => {
+      if (error) {
+        this.createToast(error);
+
+        //Default to Greenfield WI
+        this.location.name = "Greenfield"
+        this.location.latitude = 42.961;
+        this.location.longitude = -88.013;
+      }
+
+      this.getURL((url: string) => {
+        this.getForecast(url, () => {
+          count++;
+        });
+        this.getRoomTemp(url, () => {
+          count++;
+        });
+      })
+    })
+
+    //Wait for response
+    var timeout = 60000;
+    var timer = setInterval(() => {
+      if (count > 1) {
+        clearInterval(timer);
+        if (refresher)
+          refresher.complete();
+      }
+      timeout -= 100;
+      if (timeout < 0) {
+        clearInterval(timer);
+        this.showSpinner = false;
+        this.createToast("Could not reach proxy");
+        if (refresher)
+          refresher.complete();
+      }
+    }, 100);
+  }
+
+  private getLocation(callback: (error: string) => void) {
+    this.gps.getCurrentPosition()
+      .then((res) => {
+        var lat = res.coords.latitude;
+        var lon = res.coords.longitude;
+        this.location.latitude = lat;
+        this.location.longitude = lon;
+
+        this.geoCoder.reverseGeocode(lat, lon)
+          .then((result: NativeGeocoderReverseResult[]) => {
+            var city = result[0].locality;
+            this.location.name = city;
+            return callback(undefined);
+          })
+          .catch((error) => {
+            console.log('Error with reverseGeoCode', error);
+            return callback('Unable to get city info');
+          });
+      }).catch((error) => {
+        console.log('Error getting location', error);
+        if (error.code == 1)
+          return callback('Location permission denied');
+        else
+          return callback('Unable to get location');
+      });
+  }
+
+  private getURL(callback: (url: string) => void) {
     if (this.network.type == 'wifi') {
       WifiWizard2.requestPermission();
       WifiWizard2.getConnectedBSSID()
         .then((mac) => {
-          var url = mac == this.localMac ?
-                           this.localURL :
-                           this.remoteURL;
-          this.getForecast(url);
-          this.getRoomTemp(url);
+          return callback(mac == this.localMac ?
+                                 this.localURL :
+                                 this.remoteURL)
+        })
+        .catch((error) => {
+          return callback(this.remoteURL);
         });
     } else if (this.platform.is('core')) {
-      this.getForecast(this.localURL);
-      this.getRoomTemp(this.localURL);
+      return callback(this.localURL);
     } else {
-      this.getForecast(this.remoteURL);
-      this.getRoomTemp(this.remoteURL);
+      return callback(this.remoteURL);
     }
   }
 
-  getForecast(url: string) {
+  getForecast(url: string, callback: () => void) {
     this.proxy.getForecast(url,
                            this.location.latitude,
                            this.location.longitude)
@@ -125,6 +210,8 @@ export class HomePage {
 
         // Update the X-Axis with hours
         this.lineChartLabels = this.hourly.map(h => h.hour);
+
+        return callback();
       });
   }
 
@@ -157,6 +244,7 @@ export class HomePage {
                            this.graphHelper.percipitationColors;
 
     // Update the graph with temp data points by default
+    this.showSpinner = false;
     this.lineChartData = [{
       'data': data
     }];
@@ -169,7 +257,7 @@ export class HomePage {
     }
   }
 
-  getRoomTemp(url: string) {
+  getRoomTemp(url: string, callback: () => void) {
     this.proxy.getRoomTemp(url)
       .subscribe(data => {
         this.rooms = data;
@@ -177,6 +265,14 @@ export class HomePage {
         this.rooms.forEach(r => {
           r.feelsLike = this.proxy.calculateFeelsLike(r.temperature, r.humidity);
         });
+        return callback();
       });
+  }
+
+  private createToast(message: string) {
+    if (!this.platform.is('core')) {
+      this.toast.showLongBottom(message)
+        .subscribe(toast => console.log(toast));
+    }
   }
 }

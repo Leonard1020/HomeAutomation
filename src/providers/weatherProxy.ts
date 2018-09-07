@@ -1,13 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Network } from '@ionic-native/network';
-import { Observable } from 'rxjs/Observable';
+import { HttpClient } from '@angular/common/http';
 import 'rxjs/add/operator/map';
 
 @Injectable()
 export class WeatherProxy {
 
-  constructor(public http: HttpClient, private network: Network) { }
+  constructor(public http: HttpClient) { }
 
   getRoomTemp(url: string) {
     return this.http

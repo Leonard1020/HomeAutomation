@@ -84,6 +84,13 @@
     <plugin name="com.pylonproducts.wifiwizard" spec="~0.2.11" />
     <plugin name="wifiwizard2" spec="https://github.com/tripflex/WifiWizard2.git" />
     <plugin name="cordova-plugin-network-information" spec="^2.0.1" />
+    <plugin name="cordova-plugin-geolocation" spec="^4.0.1">
+        <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="To locate you" />
+    </plugin>
+    <plugin name="cordova-plugin-nativegeocoder" spec="^3.1.2">
+        <variable name="LOCATION_WHEN_IN_USE_DESCRIPTION" value="Use geocoder service" />
+    </plugin>
+    <plugin name="cordova-plugin-x-toast" spec="^2.7.0" />
     <engine name="android" spec="~7.0.0" />
     <engine name="ios" spec="~4.5.5" />
 </widget>
