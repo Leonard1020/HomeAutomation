@@ -12,15 +12,17 @@ export class RadarPage {
 
   constructor(public navCtrl: NavController,
               private sanitizer: DomSanitizer) {
+    //Radar: radar
+    //Percip: precipitation_rate
     this.radarUrl = this.sanitizer.bypassSecurityTrustResourceUrl(
-      "https://maps.darksky.net/@precipitation_rate,42.98,-88.01,9?" +
+      "https://maps.darksky.net/@radar,42.98,-88.01,9?" +
       "domain=%22+encodeURIComponent(window.location.href)+%22&" +
       "auth=1536423828_534da96e017d572d908664195495808b&" +
-      "embed=false&" +
-      "timeControl=false&" +
-      "fieldControl=false&" +
-      "defaultField=precipitation_rate&" +
-      "defaultUnits=inph");
+      "embed=true&" +
+      "timeControl=true&" +
+      "fieldControl=true&" +
+      "defaultField=radar&" +
+      "defaultUnits=_inph");
   }
 
 }
