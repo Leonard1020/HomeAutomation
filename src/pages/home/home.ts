@@ -6,7 +6,7 @@ import { Geolocation } from '@ionic-native/geolocation';
 import { Toast } from '@ionic-native/toast';
 import { NativeGeocoder,
          NativeGeocoderReverseResult,
-       /*NativeGeocoderForwardResult*/ } from '@ionic-native/native-geocoder';
+         NativeGeocoderForwardResult } from '@ionic-native/native-geocoder';
 import { WeatherProxy } from '../../providers/weatherProxy';
 import { WeatherGraphHelper } from '../../providers/WeatherGraphHelper';
 
@@ -43,6 +43,7 @@ export class HomePage {
   public lineChartColors: Array<any>;
 
   public showSpinner: boolean;
+  public searchLocation: string;
 
   constructor(public navCtrl: NavController,
               public network: Network,
@@ -82,12 +83,14 @@ export class HomePage {
   }
 
   ionViewDidLoad() {
-    this.pullData(undefined);
+    this.requestCoords(true, undefined);
   }
 
-  pullData(refresher) {
+  requestCoords(showSpinner: boolean, refresher: any) {
+    this.showSpinner = showSpinner;
+
     var count = 0;
-    this.getLocation((error: string) => {
+    this.getCoords((error: string) => {
       if (error) {
         this.createToast(error);
 
@@ -96,6 +99,7 @@ export class HomePage {
         this.location.latitude = 42.961;
         this.location.longitude = -88.013;
       }
+      this.searchLocation = this.location.name;
 
       this.getURL((url: string) => {
         this.getForecast(url, () => {
@@ -104,8 +108,8 @@ export class HomePage {
         this.getRoomTemp(url, () => {
           count++;
         });
-      })
-    })
+      });
+    });
 
     //Wait for response
     var timeout = 60000;
@@ -126,7 +130,66 @@ export class HomePage {
     }, 100);
   }
 
-  private getLocation(callback: (error: string) => void) {
+  requestSearch(showSpinner: boolean) {
+    this.showSpinner = showSpinner;
+
+    if (!this.searchLocation) {
+      this.createToast("Location is empty");
+      this.showSpinner = false;
+      return;
+    }
+
+    if (this.searchLocation.length < 3) {
+      this.createToast("Location too short");
+      this.showSpinner = false;
+      return;
+    }
+
+    if (this.location.name.trim().toLowerCase() ==
+        this.searchLocation.trim().toLowerCase()) {
+      this.showSpinner = false;
+      return;
+    }
+
+    this.geoCoder.forwardGeocode(this.searchLocation, )
+      .then((coordinates: NativeGeocoderForwardResult[]) => {
+        this.location.name = this.searchLocation;
+        this.location.latitude = coordinates[0].latitude;
+        this.location.longitude = coordinates[0].longitude;
+
+        var count = 0;
+        this.getURL((url: string) => {
+          this.getForecast(url, () => {
+            count++;
+          });
+          this.getRoomTemp(url, () => {
+            count++;
+          });
+        });
+
+        //Wait for response
+        var timeout = 60000;
+        var timer = setInterval(() => {
+          if (count > 1) {
+            clearInterval(timer);
+            this.showSpinner = false;
+          }
+          timeout -= 100;
+          if (timeout < 0) {
+            clearInterval(timer);
+            this.showSpinner = false;
+            this.createToast("Could not reach proxy");
+          }
+        }, 100);
+      })
+      .catch((error: any) => {
+        console.log('Error fetching ', error)
+        this.createToast("Unable to find location");
+        this.showSpinner = false;
+      });
+  }
+
+  private getCoords(callback: (error: string) => void) {
     this.gps.getCurrentPosition()
       .then((res) => {
         var lat = res.coords.latitude;
@@ -237,6 +300,7 @@ export class HomePage {
     this.lineChartOptions.animation = temp ?
                                       this.graphHelper.onTempAnimationComplete :
                                       this.graphHelper.onPercipAnimationComplete;
+    this.lineChartOptions.animation.duration = 0;
 
     //Update colors
     this.lineChartColors = temp ?

@@ -16,6 +16,7 @@ import { Toast } from '@ionic-native/toast';
 // Implemented Pages
 import { HomePage } from '../pages/home/home';
 import { CalendarPage } from '../pages/calendar/calendar';
+import { RadarPage } from '../pages/radar/radar'
 import { TabsPage } from '../pages/tabs/tabs';
 
 // Implemented Providers
@@ -30,6 +31,7 @@ import { MyApp } from './app.component';
     MyApp,
     CalendarPage,
     HomePage,
+    RadarPage,
     TabsPage
   ],
   imports: [
@@ -43,6 +45,7 @@ import { MyApp } from './app.component';
     MyApp,
     CalendarPage,
     HomePage,
+    RadarPage,
     TabsPage
   ],
   providers: [

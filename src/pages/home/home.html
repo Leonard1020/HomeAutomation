@@ -1,11 +1,26 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>{{location.name}}</ion-title>
+    <ion-row>
+      <!--
+      <button ion-button clear icon-only color="balanced" (click)="addNewTag()">
+          <ion-icon name="arrow-dropdown"></ion-icon>
+      </button>
+      -->
+      <ion-title>
+        <ion-input no-margin no-padding [attr.maxlength]="25" [(ngModel)]="searchLocation" style="color: black;"></ion-input>
+      </ion-title>
+      <button ion-button clear icon-only float-right color="balanced" (click)="requestSearch(true)">
+          <ion-icon name="search"></ion-icon>
+      </button>
+      <button ion-button clear icon-only float-right color="balanced" (click)="requestCoords(true, null)">
+          <ion-icon name="locate"></ion-icon>
+      </button>
+    </ion-row>
   </ion-navbar>
 </ion-header>
 
 <ion-content padding>
-  <ion-refresher (ionRefresh)="pullData($event)" *ngIf="!showSpinner">
+  <ion-refresher (ionRefresh)="requestCoords(false, $event)" *ngIf="!showSpinner">
     <ion-refresher-content
       pullingIcon="none"
       refreshingSpinner="crescent">
