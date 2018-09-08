@@ -90,6 +90,14 @@ export class HomePage {
     this.showSpinner = showSpinner;
 
     var count = 0;
+    var timeout = 60000;
+    var reqCallback = (err: any) => {
+      if (err)
+        timeout = 0;
+      else
+        count++;
+    }
+
     this.getCoords((error: string) => {
       if (error) {
         this.createToast(error);
@@ -102,17 +110,12 @@ export class HomePage {
       this.searchLocation = this.location.name;
 
       this.getURL((url: string) => {
-        this.getForecast(url, () => {
-          count++;
-        });
-        this.getRoomTemp(url, () => {
-          count++;
-        });
+        this.getForecast(url, reqCallback);
+        this.getRoomTemp(url, reqCallback);
       });
     });
 
     //Wait for response
-    var timeout = 60000;
     var timer = setInterval(() => {
       if (count > 1) {
         clearInterval(timer);
@@ -123,7 +126,7 @@ export class HomePage {
       if (timeout < 0) {
         clearInterval(timer);
         this.showSpinner = false;
-        this.createToast("Could not reach proxy");
+        this.createToast("Proxy request failed");
         if (refresher)
           refresher.complete();
       }
@@ -158,17 +161,20 @@ export class HomePage {
         this.location.longitude = coordinates[0].longitude;
 
         var count = 0;
+        var timeout = 60000;
+        var reqCallback = (err: any) => {
+          if (err)
+            timeout = 0;
+          else
+            count++;
+        }
+
         this.getURL((url: string) => {
-          this.getForecast(url, () => {
-            count++;
-          });
-          this.getRoomTemp(url, () => {
-            count++;
-          });
+          this.getForecast(url, reqCallback);
+          this.getRoomTemp(url, reqCallback);
         });
 
         //Wait for response
-        var timeout = 60000;
         var timer = setInterval(() => {
           if (count > 1) {
             clearInterval(timer);
@@ -178,7 +184,7 @@ export class HomePage {
           if (timeout < 0) {
             clearInterval(timer);
             this.showSpinner = false;
-            this.createToast("Could not reach proxy");
+            this.createToast("Proxy request failed");
           }
         }, 100);
       })
@@ -235,7 +241,7 @@ export class HomePage {
     }
   }
 
-  getForecast(url: string, callback: () => void) {
+  getForecast(url: string, callback: (error: string) => void) {
     this.proxy.getForecast(url,
                            this.location.latitude,
                            this.location.longitude)
@@ -274,7 +280,10 @@ export class HomePage {
         // Update the X-Axis with hours
         this.lineChartLabels = this.hourly.map(h => h.hour);
 
-        return callback();
+        return callback(null);
+      },
+      err => {
+        return callback(err);
       });
   }
 
@@ -321,7 +330,7 @@ export class HomePage {
     }
   }
 
-  getRoomTemp(url: string, callback: () => void) {
+  getRoomTemp(url: string, callback: (error: any) => void) {
     this.proxy.getRoomTemp(url)
       .subscribe(data => {
         this.rooms = data;
@@ -329,7 +338,10 @@ export class HomePage {
         this.rooms.forEach(r => {
           r.feelsLike = this.proxy.calculateFeelsLike(r.temperature, r.humidity);
         });
-        return callback();
+        return callback(null);
+      },
+      err => {
+        return callback(err);
       });
   }
 
